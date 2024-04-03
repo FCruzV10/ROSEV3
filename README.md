@@ -686,8 +686,14 @@ Para terminar la ejecución:
 
 ### Videos
 
+Este video muestra cómo se detecta la información del sensor de contacto. Al presionarlo aparece *Contacto: Sí*, y al soltarlo aparece *Contacto: No*.
+
 https://github.com/FCruzV10/ROSEV3/assets/45526932/1261ffcd-6b8b-4ce7-b8e3-b3c54dc726a8
 
+Este video muestra cómo se detecta la información del sensor de color. Al colocar una hoja en blanco debajo del sensor, aparece *Color: Blanco*.
+
 https://github.com/FCruzV10/ROSEV3/assets/45526932/8172dce1-0f91-4420-b3c5-2f029483ecb1
+
+Este video muestra el robot moviendose libremente en base a las instrucciones que se le daban desde la computadora con las flechas del teclado.
 
 https://github.com/FCruzV10/ROSEV3/assets/45526932/dfabb451-379d-44e2-bdb1-6c84f5dc9a36
