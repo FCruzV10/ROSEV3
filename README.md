@@ -24,6 +24,8 @@ Tabla de Contenidos
   - [Programa Arduino](#programa-arduino)
   - [Programa ROS](#programa-ros)
 - [Resultados](#resultados)
+  - [Ejecución programas](#ejecución-programas)
+  - [Videos](#videos)
 
 ## Conexión Arduino --- ROS
 
@@ -642,6 +644,8 @@ if __name__ == '__main__':
 
 Si alguna de las librerías de Python no se encuentra instalada, se puede instalar ejecutando `pip install <nombre de la librería>` en la terminal.
 
+En la interfaz gráfica se muestra en texto: el color que está detectando el sensor de color, y si se está presionando el sensor de contacto o no. Para mover el robot, se utilizan las flechas del teclado del computador. Para detenerlo, presionar cualquier otra tecla del teclado.
+
 ## Resultados
 
 ### Ejecución programas
@@ -667,9 +671,23 @@ El proceso para ejecutar todo el proyecto de manera correcta es el siguiente:
 
 Si algún comando de la terminal no funciona, ejecutar `source devel/setup.bash` y luego intentar otra vez.
 
+En terminal que ejecuta el nodo serial, se pueden obseervar las conexiones a los topics de ROS creados:
+
+![](./Imgs/serialNode.jpg)
+
+La interfaz gráfica se verá de la siguiente manera:
+
+![](./Imgs/HMI.jpg)
+
 Para terminar la ejecución:
 1. En Lego Mindstorms detener la ejecución del programa
 2. En la HMI de Python presionar el botón de PARAR
 3. En la terminal 1 y 2 presionar **Ctrl + C**
 
-### 
+### Videos
+
+https://github.com/FCruzV10/ROSEV3/assets/45526932/1261ffcd-6b8b-4ce7-b8e3-b3c54dc726a8
+
+https://github.com/FCruzV10/ROSEV3/assets/45526932/8172dce1-0f91-4420-b3c5-2f029483ecb1
+
+https://github.com/FCruzV10/ROSEV3/assets/45526932/dfabb451-379d-44e2-bdb1-6c84f5dc9a36
