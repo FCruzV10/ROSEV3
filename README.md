@@ -7,11 +7,11 @@ En este repositorio se encuentra lo siguiente:
 - Imgs -> Carpeta con imágenes utilizadas en el archivo README.
 - Arduino -> Carpeta con códigos y librerías de Arduino utilizadas.
 - Mindstorms -> Carpeta con proyectos y bloques de Lego Mindstorms Home Edition utilizados.
+- ev3_arduino -> Packete de ROS creado en este proyecto para interactuar con el robot EV3.
 
 Tabla de Contenidos
 ---
 
-- [Introducción](#introducción)
 - [Conexión Arduino --- ROS](#conexión-arduino-----ros)
   - [Configuración del proyecto](#configuración-del-proyecto)
   - [Probando la conexión](#probando-la-conexión)
@@ -24,9 +24,6 @@ Tabla de Contenidos
   - [Programa Arduino](#programa-arduino)
   - [Programa ROS](#programa-ros)
 - [Resultados](#resultados)
-- [Conclusiones](#conclusiones)
-
-## Introducción
 
 ## Conexión Arduino --- ROS
 
@@ -297,11 +294,17 @@ Esta conexión se logra utilizando el Arduino como puente. La infraestructura de
 
 Las flechas en Rojo representan la conexión necesaria para programar el Arduino y el EV3, respectivamente.
 
+Además, la comunicación entre los diferentes componentes se representa de la siguiente manera:
+
+![](./Imgs/rosComm.png)
+
+Las comunicaciones dentro de ROS se harán mediante 2 topics que envían mensajes del tipo **UInt8** (enteros de 8 bits).
+
 Se debe realizar 3 programas:
 
 1. **Programa EV3:** Programa en Lego Mindstorms para que el robot EV3 envíe información de los sensores y reciba comandos para los motores, mediante I2C.
-2. **Programa Arduino:** Programa en Arduino que recibe la información de los sensores mediante I2C y la publica en un topic de ROS. Y, lee comandos de movimiento desde el tópic de ROS y los manda por I2C al EV3.
-3. **Programa ROS:** Programa en Python que lea la información de los sensores y publique comandos del usuario a través de un topic de ROS. Para interactuar con el usuario se utiliza una interfaz gráfica.
+2. **Programa Arduino:** Programa en Arduino que recibe la información de los sensores mediante I2C y la publica en el topic de ROS. Y, lee comandos de movimiento desde el tópic de ROS y los manda por I2C al EV3.
+3. **Programa ROS:** Programa en Python que lea la información de los sensores y publique comandos del usuario a través del topic de ROS. Para interactuar con el usuario se utiliza una interfaz gráfica.
 
 ### Programa EV3
 
@@ -533,11 +536,17 @@ import rospy
 from std_msgs.msg import UInt8
 import tkinter as tk
 from PIL import Image, ImageTk
+from pynput import keyboard
 
 __author__ = "Felipe Cruz"
 __credits__ = ["Felipe Cruz"]
 __email__ = "fcruzv@unal.edu.co"
 __status__ = "Test"
+
+# Control EV3
+comandoEnviado = 0
+comandoEV3 = UInt8()
+comandoEV3.data = 0
 
 # Crear la ventana de la interfaz gráfica
 root = tk.Tk()
@@ -550,16 +559,6 @@ def STOP():
 # Colocar nombres y titulo
 tk.Label(root, text="HMI para controlar robot EV3").pack()
 tk.Label(root, text="Felipe Cruz").pack()
-tk.Label(root, text="David Cocoma").pack()
-tk.Label(root, text="Joan Jauregui").pack()
-tk.Label(root, text="Johan López").pack()
-
-# Colocar logo de la U
-image_path = '/home/feli/Documents/RoboticaMovil/ArduinoROS/src/ev3_arduino/src/UNAL.jpeg'
-img = Image.open(image_path)
-img = ImageTk.PhotoImage(img)
-image_label = tk.Label(root, image=img)
-image_label.pack()
 
 # Crear espacios para mostrar info
 color_label = tk.Label(root, text="Color: ")
@@ -572,46 +571,76 @@ move_button = tk.Button(root, text="PARAR", command=STOP)
 move_button.pack()
 
 # Definir la función callback para actualizar los valores en tiempo real
-def callback(data):
-    print(data.data)
-    if(data == 20):
+def subscriber(data):
+    if(data.data == 20):
         color_label.config(text=f"Color: Sin Color")
-    elif(data == 21):
+    elif(data.data == 21):
         color_label.config(text=f"Color: Negro")
-    elif(data == 22):
+    elif(data.data == 22):
         color_label.config(text=f"Color: Azul")
-    elif(data == 23):
+    elif(data.data == 23):
         color_label.config(text=f"Color: Verde")
-    elif(data == 24):
+    elif(data.data == 24):
         color_label.config(text=f"Color: Amarillo")
-    elif(data == 25):
+    elif(data.data == 25):
         color_label.config(text=f"Color: Rojo")
-    elif(data == 26):
+    elif(data.data == 26):
         color_label.config(text=f"Color: Blanco")
-    elif(data == 27):
+    elif(data.data == 27):
         color_label.config(text=f"Color: Café")
-    elif(data == 10):
+    elif(data.data == 10):
         contacto_label.config(text=f"Contacto: No")
-    elif(data == 11):
+    elif(data.data == 11):
         contacto_label.config(text=f"Contacto: Sí")
     else:
         pass
 
-def listener():
-    rospy.init_node('sensores_listener', anonymous=True)
-    rospy.Subscriber("sensores", UInt8, callback)
+def keyboardPress(key):
+    global comandoEV3
+    if key == keyboard.Key.up:
+        comandoEV3.data = 51
+    elif key == keyboard.Key.right:
+        comandoEV3.data = 52
+    elif key == keyboard.Key.left:
+        comandoEV3.data = 53
+    elif key == keyboard.Key.down:
+        comandoEV3.data = 54
+    else:
+        comandoEV3.data = 50
 
-def update_gui():
-    listener() # Leer datos
-    root.after(1000, update_gui)  # Actualizar
+def process():
+    global comandoEV3
+    global comandoEnviado
+    rospy.Subscriber("sensores", UInt8, subscriber)
+    publisher = rospy.Publisher("motores", UInt8, queue_size=10)
+    if(comandoEnviado != comandoEV3.data):
+        comandoEnviado = comandoEV3.data
+        publisher.publish(comandoEV3)
+   
+def process_ui():
+    # Revisar nodo activo
+    if rospy.is_shutdown():
+        return
+    
+    process() # Leer datos
+    root.after(1000, process_ui)  # Actualizar
 
 # Funcion principal
 if __name__ == '__main__':
-    # Iniciar un hilo para la actualización de la GUI
-    update_gui()
+    # Inicializar nodo
+    rospy.init_node('nodo_UI', anonymous=True)
+
+    # Inicializar hilo del teclado
+    keyboardManager = keyboard.Listener(on_press=keyboardPress)
+    keyboardManager.start()
+
+    # Iniciar un hilo para procesamiento de la UI
+    process_ui()
 
     root.mainloop() # HMI
 ```
+
+Si alguna de las librerías de Python no se encuentra instalada, se puede instalar ejecutando `pip install <nombre de la librería>` en la terminal.
 
 ## Resultados
 
@@ -636,9 +665,11 @@ El proceso para ejecutar todo el proyecto de manera correcta es el siguiente:
 7. En la terminal 3 de la máquina virtual ejecutar `rosrun ev3_arduino HMI.py`
 8. Usar las flechas del computador para mover el robot y la HMI de Python para observar lo que leen los sensores
 
+Si algún comando de la terminal no funciona, ejecutar `source devel/setup.bash` y luego intentar otra vez.
+
 Para terminar la ejecución:
 1. En Lego Mindstorms detener la ejecución del programa
 2. En la HMI de Python presionar el botón de PARAR
 3. En la terminal 1 y 2 presionar **Ctrl + C**
 
-## Conclusiones
+### 
